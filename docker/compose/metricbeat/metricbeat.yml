@@ -1,0 +1,26 @@
+metricbeat.modules:
+- module: system
+  metricsets:
+    - cpu
+    - filesystem
+    - memory
+    - network
+    - process
+  enabled: true
+  period: 10s
+  processes: ['.*']
+  cpu_ticks: false
+
+- module: system
+  metricsets: [socket]
+  period: 500ms
+  socket.reverse_lookup.enabled: true
+
+- module: system
+  period: 60s
+  metricsets: [filesystem, fsstat]
+  filters:
+    - drop_event.when.regexp.mount_point: '^(/hostfs)?/(sys|cgroup|proc|dev|etc|host|var/lib/docker)($|/)'
+      
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]

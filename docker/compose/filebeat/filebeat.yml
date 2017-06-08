@@ -1,0 +1,8 @@
+filebeat.prospectors:
+- input_type: log
+  paths:
+    - /opt/openet/FW/fwHome/UnifiedLogging/*.log.csv
+#    - /opt/openet/FW/fwHome/log/*.log
+# -- outputs
+output.logstash:
+  hosts: ["logstash:5044"]    

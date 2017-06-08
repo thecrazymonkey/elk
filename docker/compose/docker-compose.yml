@@ -1,0 +1,76 @@
+version: '2.1'
+
+#networks:
+#  default:
+#    external:
+#      name: r2d2_net
+
+services:
+  filebeat:
+    build: ./filebeat
+    image: filebeat
+    volumes: 
+        - ~/elk_logs/UL:/opt/openet/FW/fwHome/UnifiedLogging
+        - ~/elk_logs/log:/opt/openet/FW/fwHome/log
+    hostname: filebeat
+    depends_on:
+       elasticsearch: { condition: service_healthy }
+#    deploy:
+#      replicas: 0
+           
+#  metricbeat:
+#    build: ./metricbeat
+#    hostname: metrisbeat
+#    command: ["-system.hostfs=/hostfs" ]
+#    volumes:
+#       - /proc:/hostfs/proc:ro  
+#       - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro  
+#       - /:/hostfs:ro 
+#     networks: host 
+#    depends_on:
+#      - elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.4.1
+    volumes:
+      - ./config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    hostname: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://elasticsearch:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3   
+#    deploy:
+#      replicas: 1
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:5.4.1
+    volumes:
+      - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./pipeline:/usr/share/logstash/pipeline
+    hostname: logstash
+    ports:
+      - "6000:5000"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    depends_on:
+       elasticsearch: { condition: service_healthy }
+#    deploy:
+#      replicas: 1
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.4.1
+    volumes:
+      - ./config/:/usr/share/kibana/config
+    hostname: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+       elasticsearch: { condition: service_healthy }
+#    deploy:
+#      replicas: 1
