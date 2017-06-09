@@ -5,4 +5,4 @@ filebeat.prospectors:
 #    - /opt/openet/FW/fwHome/log/*.log
 # -- outputs
 output.logstash:
-  hosts: ["logstash:5044"]    
+  hosts: ["logstash:${BEAT_PORT:5044}"]    

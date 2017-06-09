@@ -9,26 +9,31 @@ services:
   filebeat:
     build: ./filebeat
     image: filebeat
+    environment: 
+      BEAT_PORT: 5044
     volumes: 
         - ~/elk_logs/UL:/opt/openet/FW/fwHome/UnifiedLogging
         - ~/elk_logs/log:/opt/openet/FW/fwHome/log
     hostname: filebeat
     depends_on:
-       elasticsearch: { condition: service_healthy }
+       logstash: { condition: service_healthy }
 #    deploy:
 #      replicas: 0
            
-#  metricbeat:
-#    build: ./metricbeat
-#    hostname: metrisbeat
-#    command: ["-system.hostfs=/hostfs" ]
-#    volumes:
-#       - /proc:/hostfs/proc:ro  
-#       - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro  
-#       - /:/hostfs:ro 
-#     networks: host 
-#    depends_on:
-#      - elasticsearch
+  metricbeat:
+    build: ./metricbeat
+    hostname: metricbeat
+#    command: metricbeat -e -system.hostfs=/hostfs
+    volumes:
+       - /proc:/hostfs/proc:ro  
+       - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro  
+       - /:/hostfs:ro
+    environment: 
+      ES_HOST_PORT: "elasticsearch:9200"
+#    networks: 
+#      - host 
+    depends_on:
+      elasticsearch: { condition: service_healthy }
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:5.4.1
@@ -40,11 +45,14 @@ services:
       - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      SERVICE_NAME: "{{.Service.Name}}"
+      ES_NETWORK_HOST: "0.0.0.0"
+      ES_CLUSTER_NAME: "docker-cluster"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://elasticsearch:9200"]
-      interval: 30s
+      test: curl -f http://elasticsearch:9200 || exit 1
+      interval: 20s
       timeout: 10s
-      retries: 3   
+      retries: 8   
 #    deploy:
 #      replicas: 1
 
@@ -53,13 +61,23 @@ services:
     volumes:
       - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./pipeline:/usr/share/logstash/pipeline
+    environment: 
     hostname: logstash
     ports:
       - "6000:5000"
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+      BEAT_PORT: 5044
+      SERVICE_NAME: "{{.Service.Name}}"
+      ES_HOST_PORT: "elasticsearch:9200"
+      HTTP_HOST: "logstash"
     depends_on:
        elasticsearch: { condition: service_healthy }
+    healthcheck:
+      test: cat < /dev/null > /dev/tcp/logstash/5044
+      interval: 30s
+      timeout: 10s
+      retries: 5      
 #    deploy:
 #      replicas: 1
 
@@ -67,6 +85,11 @@ services:
     image: docker.elastic.co/kibana/kibana:5.4.1
     volumes:
       - ./config/:/usr/share/kibana/config
+    environment:
+      ELASTICSEARCH_URL: "http://elasticsearch:9200"
+      SERVICE_NAME: "{{.Service.Name}}"
+      SERVER_NAME: "kibana"
+      SERVER_HOST: "0.0.0.0"
     hostname: kibana
     ports:
       - "5601:5601"

@@ -23,4 +23,7 @@ metricbeat.modules:
     - drop_event.when.regexp.mount_point: '^(/hostfs)?/(sys|cgroup|proc|dev|etc|host|var/lib/docker)($|/)'
       
 output.elasticsearch:
-  hosts: ["elasticsearch:9200"]
+  hosts: ["${ES_HOST_PORT}"]
+  template.name: "metricbeat"
+  template.path: "metricbeat.template.json"
+  template.overwrite: false

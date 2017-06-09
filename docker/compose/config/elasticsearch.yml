@@ -2,8 +2,8 @@
 ## Default Elasticsearch configuration from elasticsearch-docker.
 ## from https://github.com/elastic/elasticsearch-docker/blob/master/build/elasticsearch/elasticsearch.yml
 #
-cluster.name: "docker-cluster"
-network.host: "elasticsearch"
+cluster.name: "${ES_CLUSTER_NAME}"
+network.host: "${ES_NETWORK_HOST}"
 
 # minimum_master_nodes need to be explicitly set when bound on a public IP
 # set to 1 to allow single node clusters
