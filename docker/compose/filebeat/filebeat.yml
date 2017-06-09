@@ -1,8 +1,37 @@
-filebeat.prospectors:
-- input_type: log
-  paths:
-    - /opt/openet/FW/fwHome/UnifiedLogging/*.log.csv
+filebeat:
+  prospectors:
+    - 
+       input_type: log
+       paths:
+         - "/opt/openet/FW/fwHome/statistics/ServerCTE/*_high.stats.csv"
+       tags: ["fwhstats"]
+  
+    - 
+       input_type: log
+       paths:
+         - "/opt/openet/FW/fwHome/UnifiedLogging/*.log.csv"
+       tags: ["fwlog"]
+  
+    - 
+       input_type: log
+       paths:
+         - "/opt/openet/FW/fwHome/statistics/ServerCTE/*_Compositehigh.stats.csv"
+       tags: ["fwchstats"]
+
 #    - /opt/openet/FW/fwHome/log/*.log
 # -- outputs
-output.logstash:
-  hosts: ["logstash:${BEAT_PORT:5044}"]    
+output:
+  logstash:
+    hosts: ["logstash:${BEAT_PORT:5044}"]    
+
+logging:
+  level: debug
+  
+  to_files: true
+  # do not log to syslog
+  to_syslog: false
+
+  files:
+    path: /usr/share/filebeat/logs
+    name: filebeat.log
+    keepfiles: 7
