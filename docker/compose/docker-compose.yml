@@ -14,6 +14,7 @@ services:
     volumes: 
         - ~/elk_logs/UL:/opt/openet/FW/fwHome/UnifiedLogging
         - ~/elk_logs/log:/opt/openet/FW/fwHome/log
+        - ~/elk_logs/statistics/ServerCTE:/opt/openet/FW/fwHome/statistics/ServerCTE
     hostname: filebeat
     depends_on:
        logstash: { condition: service_healthy }
@@ -61,6 +62,7 @@ services:
     volumes:
       - ./config/logstash.yml:/usr/share/logstash/config/logstash.yml
       - ./pipeline:/usr/share/logstash/pipeline
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro  
     environment: 
     hostname: logstash
     ports:
@@ -71,6 +73,7 @@ services:
       SERVICE_NAME: "{{.Service.Name}}"
       ES_HOST_PORT: "elasticsearch:9200"
       HTTP_HOST: "logstash"
+      LOG_LEVER: "trace"
     depends_on:
        elasticsearch: { condition: service_healthy }
     healthcheck:

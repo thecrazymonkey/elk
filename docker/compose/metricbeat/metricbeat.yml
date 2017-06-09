@@ -24,7 +24,7 @@ metricbeat.modules:
 
 - module: docker
   metricsets: ["container", "cpu", "diskio", "healthcheck", "info", "memory", "network"]
-  hosts: ["unix:///var/run/docker.sock", "tcp://0.0.0.0:2375"]
+  hosts: ["unix:///var/run/docker.sock", "tcp://10.1.2.30:2375"]
   enabled: true
   period: 10s
       

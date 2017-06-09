@@ -25,13 +25,4 @@ output:
     hosts: ["logstash:${BEAT_PORT:5044}"]    
 
 logging:
-  level: debug
-  
-  to_files: true
-  # do not log to syslog
-  to_syslog: false
-
-  files:
-    path: /usr/share/filebeat/logs
-    name: filebeat.log
-    keepfiles: 7
+  level: info
