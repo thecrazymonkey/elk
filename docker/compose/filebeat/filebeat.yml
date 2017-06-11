@@ -4,19 +4,19 @@ filebeat:
        input_type: log
        paths:
          - "/opt/openet/FW/fwHome/statistics/ServerCTE/*_high.stats.csv"
-       tags: ["fwhstats"]
-  
+       document_type: stat
+         
     - 
        input_type: log
        paths:
          - "/opt/openet/FW/fwHome/UnifiedLogging/*.log.csv"
-       tags: ["fwlog"]
+       document_type: log
   
-    - 
-       input_type: log
-       paths:
-         - "/opt/openet/FW/fwHome/statistics/ServerCTE/*_Compositehigh.stats.csv"
-       tags: ["fwchstats"]
+#    - 
+#       input_type: log
+#       paths:
+#         - "/opt/openet/FW/fwHome/statistics/ServerCTE/*_Compositehigh.stats.csv"
+#       document_type: cstat
 
 #    - /opt/openet/FW/fwHome/log/*.log
 # -- outputs

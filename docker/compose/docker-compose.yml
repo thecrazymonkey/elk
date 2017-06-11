@@ -11,10 +11,11 @@ services:
     image: filebeat
     environment: 
       BEAT_PORT: 5044
+      TZ: "America/New_York"
     volumes: 
-        - ~/elk_logs/UL:/opt/openet/FW/fwHome/UnifiedLogging
-        - ~/elk_logs/log:/opt/openet/FW/fwHome/log
-        - ~/elk_logs/statistics/ServerCTE:/opt/openet/FW/fwHome/statistics/ServerCTE
+        - ~/elk_logs/UL:/opt/openet/FW/fwHome/UnifiedLogging:ro
+        - ~/elk_logs/log:/opt/openet/FW/fwHome/log:ro
+        - ~/elk_logs/statistics/ServerCTE:/opt/openet/FW/fwHome/statistics/ServerCTE:ro
     hostname: filebeat
     depends_on:
        logstash: { condition: service_healthy }
@@ -30,9 +31,9 @@ services:
        - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro  
        - /:/hostfs:ro
     environment: 
-      ES_HOST_PORT: "elasticsearch:9200"
-#    networks: 
-#      - host 
+      ES_HOST_PORT: "localhost:9200"
+      TZ: "America/New_York"
+    network_mode: "host"
     depends_on:
       elasticsearch: { condition: service_healthy }
 
@@ -49,6 +50,7 @@ services:
       SERVICE_NAME: "{{.Service.Name}}"
       ES_NETWORK_HOST: "0.0.0.0"
       ES_CLUSTER_NAME: "docker-cluster"
+      TZ: "America/New_York"
     healthcheck:
       test: curl -f http://elasticsearch:9200 || exit 1
       interval: 20s
@@ -64,6 +66,7 @@ services:
       - ./pipeline:/usr/share/logstash/pipeline
       - /sys/fs/cgroup:/sys/fs/cgroup:ro  
     environment: 
+      TZ: "America/New_York"
     hostname: logstash
     ports:
       - "6000:5000"
@@ -93,6 +96,7 @@ services:
       SERVICE_NAME: "{{.Service.Name}}"
       SERVER_NAME: "kibana"
       SERVER_HOST: "0.0.0.0"
+      TZ: "America/New_York"
     hostname: kibana
     ports:
       - "5601:5601"
@@ -104,7 +108,28 @@ services:
   grafana:
     image: grafana/grafana
     hostname: grafana
+    environment:
+      TZ: "America/New_York"
     ports:
       - "3000:3000"
     depends_on:
        elasticsearch: { condition: service_healthy }
+    healthcheck:
+      test: curl -f http://grafana:3000 || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 8   
+
+  loader:
+    image: cirros
+    environment:
+      GRAFANA_HOST: grafana
+    volumes:
+      - ./loader/run.sh:/run.sh:ro
+      - ./loader/dashboards:/dashboards:ro
+#    network_mode: "host"
+    depends_on:
+       grafana: { condition: service_healthy }
+    command: /run.sh
+    
+      
